@@ -31,20 +31,22 @@ Now I'm part of Trailblazers team, so here i have worked on following items:
 
 
 
-	Upon joining the Pathfinders team, I quickly gained proficiency in FDX and TPCS, which allowed me to contribute effectively to the team. My primary accomplishments included:
+	When I joined the Pathfinders team, I quickly gained experience in both FDX and TPCS. After getting hands-on, I began implementing critical processes:
 
-Consent Modernization: Implemented TAN handling.
-VDBS Service: Conducted performance testing after a JAVA upgrade.
-Consent Status Job: Executed performance testing following a migration.
-Daily Job Enhancements: Worked on retrying failed VAN updates, preparing test cases, QA validations, performance testing with Dual Write, and reporting.
-Photon Upgrade: Led the Photon upgrade for the VDBS service.
-In the Trailblazers team, I undertook the following projects:
+I implemented handling of TANs as part of our consent modernization efforts.
+Conducted performance testing for the VDBS service following a JAVA version upgrade, ensuring the service’s responsiveness and stability post-upgrade.
+Executed performance testing for the consent status job after migration to validate functionality and optimize job performance.
+Worked extensively on the daily job responsible for retrying failed VAN updates, including preparation of test cases, conducting QA validations, Dual Write performance testing, and creating reports for better visibility.
+Additionally, I was responsible for executing a Photon upgrade for the VDBS service, contributing to the system’s enhanced performance.
+After moving to the Trailblazers team, my responsibilities expanded to a range of projects, each broadening my experience:
 
-Photon Upgrades and Deployments: Managed the Photon upgrade and production deployments for the consent-db-migration and PDR services.
-Knowledge Transfer (KT): Completed KT on app onboarding services, providing valuable insights into the entire flow.
-Performance and Production Testing: Conducted PVT testing for CAOE services and performed multiple production deployments for new pool additions.
-Consent-db-migration and Scripting: Enhanced consent-db-migration using our Liquibase repo, created PBB tables, and developed a script to convert Excel files into SQL queries for efficient data loading.
-Integration and Migration Work: Integrated AEM endpoints with CCAR for the target state, and conducted PDR migration and RECON analysis in the performance environment.
-Production Support: Shadowed production support and received KT, preparing me to handle these tasks independently.
-Professional Development: Completed AWS Developer Associate training and am preparing to take the certification exam.
-  
+I led the Photon upgrade for the consent-db-migration service to improve data consistency and streamline data migrations.
+Managed production deployments post-Photon upgrade for both the PDR and consent-db-migration services, ensuring smooth rollout and stability.
+Received knowledge transfer (KT) on app onboarding services, which provided a comprehensive understanding of the full application flow, proving valuable for project work.
+Performed PVT testing for the CAOE service, validating it in the performance environment to ensure readiness for production.
+Led CAOE deployments for new pool additions, conducting several production deployments which gave me hands-on experience with production handling.
+Developed expertise with consent-db-migration, our Liquibase repository, to create PBB tables and wrote a script to efficiently load data into these tables. This script allows input from Excel files and converts them into SQL queries, simplifying future data loading tasks.
+Integrated new AEM endpoints with our CCAR service as part of target state improvements.
+Conducted a PDR migration and ran PDR reconciliation jobs in the performance environment, analyzing mismatches and preparing to do the same in production.
+Gained exposure to production support by shadowing the support team and completing KT sessions, preparing me to manage support responsibilities independently.
+For my professional development, I completed AWS Developer Associate training and am preparing to take the certification exam.

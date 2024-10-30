@@ -50,3 +50,12 @@ Integrated new AEM endpoints with our CCAR service as part of target state impro
 Conducted a PDR migration and ran PDR reconciliation jobs in the performance environment, analyzing mismatches and preparing to do the same in production.
 Gained exposure to production support by shadowing the support team and completing KT sessions, preparing me to manage support responsibilities independently.
 For my professional development, I completed AWS Developer Associate training and am preparing to take the certification exam.
+
+
+
+
+
+	When I joined the team, I was new to the environment but quickly integrated by collaborating effectively with team members. I engaged actively in team discussions and worked closely with others, contributing meaningfully to our projects. Through this collaborative approach, I was able to learn, share ideas, and support the team’s goals, ultimately helping us achieve successful outcomes together
+	During the Photon version upgrade, I collaborated closely with other teams to ensure a smooth and efficient transition. This cross-team cooperation was essential for addressing dependencies, troubleshooting challenges, and aligning our upgrade efforts with the larger system requirements. Through this collaboration, we were able to complete the upgrade successfully and enhance overall performance.
+	While I haven't had the opportunity to mentor anyone formally, I am always open and approachable. If anyone comes to me with queries or seeks assistance, I make it a priority to respond thoughtfully and provide the guidance they need. I believe in fostering a supportive environment and helping my colleagues to the best of my ability
+	While working on daily job tasks, I collaborated with Vijaya and other members of the Illuminatoes team. This teamwork allowed us to complete our work more efficiently and effectively, resulting in faster turnaround times and improved outcomes. The collaborative effort not only enhanced productivity but also fostered a strong sense of partnership among our teams

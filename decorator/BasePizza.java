@@ -27,5 +27,24 @@ Now I'm part of Trailblazers team, so here i have worked on following items:
 	Also got a chance to shadow Production support, and got KT for that, so that i can next time handle it on my own
 	
 	Took AWS developer assocoiate tarining and will take the exam 
-  
+
+
+
+
+	Upon joining the Pathfinders team, I quickly gained proficiency in FDX and TPCS, which allowed me to contribute effectively to the team. My primary accomplishments included:
+
+Consent Modernization: Implemented TAN handling.
+VDBS Service: Conducted performance testing after a JAVA upgrade.
+Consent Status Job: Executed performance testing following a migration.
+Daily Job Enhancements: Worked on retrying failed VAN updates, preparing test cases, QA validations, performance testing with Dual Write, and reporting.
+Photon Upgrade: Led the Photon upgrade for the VDBS service.
+In the Trailblazers team, I undertook the following projects:
+
+Photon Upgrades and Deployments: Managed the Photon upgrade and production deployments for the consent-db-migration and PDR services.
+Knowledge Transfer (KT): Completed KT on app onboarding services, providing valuable insights into the entire flow.
+Performance and Production Testing: Conducted PVT testing for CAOE services and performed multiple production deployments for new pool additions.
+Consent-db-migration and Scripting: Enhanced consent-db-migration using our Liquibase repo, created PBB tables, and developed a script to convert Excel files into SQL queries for efficient data loading.
+Integration and Migration Work: Integrated AEM endpoints with CCAR for the target state, and conducted PDR migration and RECON analysis in the performance environment.
+Production Support: Shadowed production support and received KT, preparing me to handle these tasks independently.
+Professional Development: Completed AWS Developer Associate training and am preparing to take the certification exam.
   

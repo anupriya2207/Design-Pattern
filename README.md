@@ -17,10 +17,14 @@ def validate_percentage_sum(excel_file):
         filtered_df = df_excel[df_excel.iloc[:, 1].astype(str).str.startswith(str(start_digit))]
 
         # Group by app_client_id and inv_cls_id, and sum the percentages
-        grouped = filtered_df.groupby([df_excel.columns[0], df_excel.columns[1]])[df_excel.columns[2]].sum()
+        grouped = filtered_df.groupby([df_excel.columns[0], df_excel.columns[1]])[df_excel.columns[2]].sum().reset_index()
 
         # Check if the sum of percentages is 100 for each (app_client_id, inv_cls_id) combination
-        for (app_client, inv_cls), percentage_sum in grouped.items():
+        for _, row in grouped.iterrows():
+            app_client = row[df_excel.columns[0]]
+            inv_cls = row[df_excel.columns[1]]
+            percentage_sum = row[df_excel.columns[2]]
+
             if percentage_sum != 100:
                 # If the sum is not 100, add the rows contributing to the invalid sum
                 invalid_rows = filtered_df[

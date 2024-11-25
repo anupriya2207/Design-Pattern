@@ -9,7 +9,7 @@ def check_app_client_ids(file1, file2):
     df2 = pd.read_csv(file2)
 
     # Extract app client ids from the respective columns
-    app_client_ids_file1 = set(df1.iloc[:, 0])  # 1st column in file1
+    app_client_ids_file1 = set(df_csv.iloc[:, 0].astype(str).str.strip())  # 1st column in file1
     app_client_ids_file2 = set(df2.iloc[:, 6])  # 7th column in file2 (index 6)
 
     # Find app client ids that are in file1 but not in file2
@@ -29,3 +29,6 @@ file2_path = "file2.csv"
 
 # Call the function
 check_app_client_ids(file1_path, file2_path)
+
+
+

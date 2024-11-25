@@ -1,34 +1,39 @@
 # Design-Pattern
+def validate_percentage_sum(csv_file):
+    # Load the CSV file into a DataFrame
+    df_csv = pd.read_csv(csv_file)
 
+    # Ensure columns are of correct types
+    df_csv.iloc[:, 0] = df_csv.iloc[:, 0].astype(str).str.strip()  # App client id (1st column)
+    df_csv.iloc[:, 1] = df_csv.iloc[:, 1].astype(str).str.strip()  # Inv_cls id (as string to check starting digit)
+    df_csv.iloc[:, 2] = df_csv.iloc[:, 2].astype(float)            # Percentage column (3rd column)
 
-import pandas as pd
+    # Initialize a list to collect all invalid combinations
+    all_invalid_combinations = []
 
-def check_app_client_ids(file1, file2):
-    # Load the CSV files into DataFrames
-    df1 = pd.read_csv(file1)
-    df2 = pd.read_csv(file2)
+    # Loop through the inv_cls id starting numbers to check
+    for start_digit in range(1, 6):  # Covers 1, 2, 3, 4, 5
+        # Filter rows where inv_cls id starts with the current digit
+        filtered_df = df_csv[df_csv.iloc[:, 1].str.startswith(str(start_digit))]
 
-    # Extract app client ids from the respective columns
-    app_client_ids_file1 = set(df_csv.iloc[:, 0].astype(str).str.strip())  # 1st column in file1
-    app_client_ids_file2 = set(df2.iloc[:, 6])  # 7th column in file2 (index 6)
+        # Group by app client id and starting digit, summing percentages
+        grouped = filtered_df.groupby([df_csv.columns[0], df_csv.columns[1]])[df_csv.columns[2]].sum()
 
-    # Find app client ids that are in file1 but not in file2
-    missing_ids = app_client_ids_file1 - app_client_ids_file2
+        # Find invalid combinations where the sum != 100
+        invalid_combinations = grouped[grouped != 100]
 
-    # Print the results
-    if not missing_ids:
-        print("All app client ids in the first CSV are present in the second CSV.")
+        # For each invalid combination, find the original rows contributing to it
+        for (app_client, inv_cls) in invalid_combinations.index:
+            invalid_rows = filtered_df[
+                (filtered_df.iloc[:, 0] == app_client) & (filtered_df.iloc[:, 1] == inv_cls)
+            ]
+            all_invalid_combinations.append((app_client, inv_cls, invalid_rows, invalid_combinations[(app_client, inv_cls)]))
+
+    # Output only invalid combinations with details (excluding inv_cls_group)
+    if all_invalid_combinations:
+        print("Invalid combinations (sum != 100) with contributing rows:")
+        for app_client, inv_cls, rows, total in all_invalid_combinations:
+            print(f"\nApp client id: {app_client}, Inv_cls id: {inv_cls}, Total: {total}")
+            print(rows.to_string(index=False))
     else:
-        print("The following app client ids are missing in the second CSV:")
-        for missing_id in missing_ids:
-            print(missing_id)
-
-# File paths for the input CSVs
-file1_path = "file1.csv"
-file2_path = "file2.csv"
-
-# Call the function
-check_app_client_ids(file1_path, file2_path)
-
-
-
+        print("All combinations satisfy the condition (sum = 100).")

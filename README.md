@@ -1,12 +1,12 @@
 # Design-Pattern
-def validate_percentage_sum(csv_file):
-    # Load the CSV file into a DataFrame
-    df_csv = pd.read_csv(csv_file)
+def validate_percentage_sum(excel_file):
+    # Load the Excel file into a DataFrame
+    df_excel = pd.read_excel(excel_file)
 
     # Ensure columns are of correct types
-    df_csv.iloc[:, 0] = df_csv.iloc[:, 0].astype(str).str.strip().str.upper()  # App client id (1st column) in uppercase
-    df_csv.iloc[:, 1] = df_csv.iloc[:, 1].astype(int)                            # Inv_cls id (as integer)
-    df_csv.iloc[:, 2] = df_csv.iloc[:, 2].astype(int)                            # Percentage column (as integer)
+    df_excel.iloc[:, 0] = df_excel.iloc[:, 0].astype(str).str.strip().str.upper()  # App client id (1st column) in uppercase
+    df_excel.iloc[:, 1] = df_excel.iloc[:, 1].astype(int)                            # Inv_cls id (as integer)
+    df_excel.iloc[:, 2] = df_excel.iloc[:, 2].astype(int)                            # Percentage column (as integer)
 
     # Initialize a list to collect all invalid combinations
     all_invalid_combinations = []
@@ -14,10 +14,10 @@ def validate_percentage_sum(csv_file):
     # Loop through the inv_cls id starting numbers to check (1 to 5)
     for start_digit in range(1, 6):  # Covers 1, 2, 3, 4, 5
         # Filter rows where inv_cls id starts with the current digit
-        filtered_df = df_csv[df_csv.iloc[:, 1].astype(str).str.startswith(str(start_digit))]
+        filtered_df = df_excel[df_excel.iloc[:, 1].astype(str).str.startswith(str(start_digit))]
 
         # Group by app_client_id and inv_cls_id, and sum the percentages
-        grouped = filtered_df.groupby([df_csv.columns[0], df_csv.columns[1]])[df_csv.columns[2]].sum()
+        grouped = filtered_df.groupby([df_excel.columns[0], df_excel.columns[1]])[df_excel.columns[2]].sum()
 
         # Check if the sum of percentages is 100 for each (app_client_id, inv_cls_id) combination
         for (app_client, inv_cls), percentage_sum in grouped.items():

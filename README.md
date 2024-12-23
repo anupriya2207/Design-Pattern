@@ -228,3 +228,52 @@ def validate_and_save_combined(file1, file2, file3, output_file):
     # Print the results
     print(f"Combined invalid, missing, and percentage validation entries saved to {output_file}")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+# Check whether app clients ids are valid
+def check_app_client_ids(file1, file2, file4, file5):
+    # Load the CSV files into DataFrames
+    df1 = pd.read_excel(file1)
+    df2 = pd.read_csv(file2)
+
+    # Extract app client ids from the respective columns
+    app_client_ids_file1 = set(df1.iloc[:, 0].astype(str).str.strip())  # 1st column in file1
+    app_client_ids_file2 = set(df2.iloc[:, 6].astype(str).str.strip())  # 7th column in file2 (index 6)
+
+    # Find app client ids that are in file1 but not in file2
+    missing_ids = app_client_ids_file1 - app_client_ids_file2
+
+    # Separate invalid rows
+    invalid_rows = df1[df1.iloc[:, 0].astype(str).str.strip().isin(missing_ids)]
+
+    #Add reason column to the invalid rows
+    invalid_rows['Reason'] = 'App Client id is not present in thrd_prty_appl table, hence its invalid'
+
+    # Print the results
+    if not missing_ids:
+        print("All app client ids in the Application_Inventory_Breakdown table are present in the thrd_prty_appln")
+    else:
+        print("The following app client ids are missing in the thrd_prty_appln table:")
+        for missing_id in missing_ids:
+            print(missing_id)
+
+    # For Van data category check, get the valid app client ids, and then call the function that validates van data category
+    valid_ids = app_client_ids_file1 - missing_ids
+    for valid_id in valid_ids:
+        print("Valid ids are:")
+        print(valid_id)
+    van_not_associated_apps = van_data_category_check(valid_ids, file4, file5)           #app client ids where van data category is not associated
+    return invalid_rows
+

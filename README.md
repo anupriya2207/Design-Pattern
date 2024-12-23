@@ -181,3 +181,19 @@ check_app_client_ids_and_filter(file1, file2, output_file_invalid)
 
     return missing_rows
 
+
+
+    def validate_and_save_combined(file1, file2, file3, output_file):
+    # Get invalid app client ids and missing inventory classification ids
+    invalid_app_client_rows = check_app_client_ids_and_filter(file1, file2)
+    missing_inv_cls_rows = check_inv_cls_ids(file1, file3)
+
+    # Combine the results
+    combined_results = pd.concat([invalid_app_client_rows, missing_inv_cls_rows], ignore_index=True)
+
+    # Save combined results to a single output file
+    combined_results.to_excel(output_file, index=False)
+
+    # Print the results
+    print(f"Combined invalid and missing entries saved to {output_file}")
+

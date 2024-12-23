@@ -1,32 +1,37 @@
 # Design-Pattern
-def sum_percentage_for_inv_cls_starting_with_1_to_9(excel_file):
-    # Load the Excel file into a DataFrame
-    df_excel = pd.read_excel(excel_file)
 
-    # Ensure columns are of correct types
-    df_excel.iloc[:, 0] = df_excel.iloc[:, 0].astype(str).str.strip().str.upper()  # App client id (1st column) in uppercase
-    df_excel.iloc[:, 1] = df_excel.iloc[:, 1].astype(int)                            # Inv_cls id (as integer)
-    df_excel.iloc[:, 2] = df_excel.iloc[:, 2].astype(int)                            # Percentage column (as integer)
+# Load the CSV file
+file_path = 'file4.csv'  # Replace with the actual path to file4
+file4_df = pd.read_csv(file_path)
 
-    # Get unique app_client_ids
-    unique_app_clients = df_excel.iloc[:, 0].unique()
+# List of App Client IDs to match
+app_client_ids = ['ID1', 'ID2', 'ID3']  # Replace with your list of App Client IDs
 
-    # Iterate over each unique app_client_id
-    for app_client in unique_app_clients:
-        # Iterate over inv_cls_id starting with digits 1 to 9
-        for start_digit in ['1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            # Filter data for the current app_client_id and inv_cls_id starting with the digit
-            filtered_df = df_excel[(df_excel.iloc[:, 0] == app_client) & 
-                                   (df_excel.iloc[:, 1].astype(str).str.startswith(start_digit))]
+# Ensure the App Client IDs in both list and CSV are compared in uppercase
+file4_df['App_Client_ID'] = file4_df['App_Client_ID'].str.upper()
+app_client_ids_upper = [id.upper() for id in app_client_ids]
 
-            if not filtered_df.empty:
-                # Group by app_client_id and inv_cls_id, and sum the percentages for the filtered data
-                grouped = filtered_df.groupby([df_excel.columns[0], df_excel.columns[1]])[df_excel.columns[2]].sum().reset_index()
+# Initialize an empty list to collect results
+results = []
 
-                # Calculate the total sum of percentages for inv_cls_id starting with the current digit
-                total_percentage_sum = grouped[df_excel.columns[2]].sum()
+# Iterate through each App Client ID
+for app_client_id in app_client_ids_upper:
+    # Filter rows for the current App Client ID
+    filtered_df = file4_df[file4_df['App_Client_ID'] == app_client_id]
+    
+    # Group by Data_Cat and get the latest version
+    latest_versions = (
+        filtered_df.groupby('Data_Cat', as_index=False)
+        .apply(lambda group: group.loc[group['Version'].idxmax()])
+        .reset_index(drop=True)
+    )
+    
+    # Append the results to the list
+    results.append(latest_versions)
 
-                # Check if the total sum of percentages is equal to 100
-                if total_percentage_sum != 100:
-                    print(f"\n** Invalid: The total sum of percentages for {app_client} (inv_cls_id starting with '{start_digit}') is {total_percentage_sum}. This should be 100.")
-                    print(grouped)
+# Combine all results into a single DataFrame
+final_df = pd.concat(results, ignore_index=True)
+
+# Print the result
+print("Filtered results:")
+print(final_df)

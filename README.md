@@ -277,3 +277,39 @@ def check_app_client_ids(file1, file2, file4, file5):
     van_not_associated_apps = van_data_category_check(valid_ids, file4, file5)           #app client ids where van data category is not associated
     return invalid_rows
 
+
+
+
+
+
+
+
+
+
+def validate_and_save_combined(file1, file2, file3, file4, file5, output_file):
+    # Get invalid app client ids and missing inventory classification ids
+    invalid_app_client_rows = check_app_client_ids_and_filter(file1, file2)
+    missing_inv_cls_rows = check_inv_cls_ids(file1, file3)
+
+    # Validate percentage sum
+    invalid_percentage_rows = validate_percentage_sum(file1)
+
+    # Perform VAN data category check
+    df1 = pd.read_excel(file1)
+    app_client_ids = df1.iloc[:, 0].astype(str).str.strip().tolist()
+    missing_van_app_clients = van_data_category_check(app_client_ids, file4, file5)
+
+    # Create a DataFrame for missing VAN_CAT entries
+    missing_van_df = pd.DataFrame({
+        'App_Client_ID': missing_van_app_clients,
+        'Reason': 'VAN_CAT not found'
+    })
+
+    # Combine all results
+    combined_results = pd.concat([invalid_app_client_rows, missing_inv_cls_rows, invalid_percentage_rows, missing_van_df], ignore_index=True)
+
+    # Save combined results to a single output file
+    combined_results.to_excel(output_file, index=False)
+
+    # Print the results
+    print(f"Combined invalid, missing, and percentage validation entries saved to {output_file}")

@@ -37,3 +37,10 @@ for app_client_id in app_client_ids_upper:
     # Display the mapped result for the current App Client ID
     print(f"Mapped results for App Client ID: {app_client_id}")
     print(mapped_results)
+
+
+    # Check if data_clstr_nm is VAN_CAT
+    if 'VAN_CAT' in mapped_results.iloc[:, 1].values:  # Assuming the second column in mapped_results is data_clstr_nm
+        print(f"VAN_CAT found for App Client ID: {app_client_id}")
+    else:
+        print(f"VAN_CAT not found for App Client ID: {app_client_id}")

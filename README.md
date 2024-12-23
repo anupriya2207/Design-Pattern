@@ -145,3 +145,29 @@ file5_path = r"C:\Users\n799731\PBB\data_cat.csv"
 check_app_client_ids(file1_path, file2_path, file4_path, file5_path)
 check_inv_cls_ids(file1_path, file3_path)
 validate_percentage_sum(file1_path)
+
+
+
+
+
+# Separate invalid rows
+    invalid_rows = df1[df1.iloc[:, 0].astype(str).str.strip().isin(missing_ids)]
+
+    # Save invalid rows to a new output file
+    invalid_rows.to_excel(output_file_invalid, index=False)
+
+    # Print the results
+    if not missing_ids:
+        print("All app client ids in the Application_Inventory_Breakdown table are present in the thrd_prty_appln")
+    else:
+        print("The following app client ids are missing in the thrd_prty_appln table and saved to a new file:")
+        for missing_id in missing_ids:
+            print(missing_id)
+
+# Example usage
+file1 = 'Application_Inventory_Breakdown.xlsx'  # Replace with the actual path to the first file
+file2 = 'thrd_prty_appln.csv'  # Replace with the actual path to the second file
+output_file_invalid = 'Invalid_App_Client_IDs.xlsx'  # File to save invalid rows
+
+check_app_client_ids_and_filter(file1, file2, output_file_invalid)
+

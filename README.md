@@ -171,3 +171,13 @@ output_file_invalid = 'Invalid_App_Client_IDs.xlsx'  # File to save invalid rows
 
 check_app_client_ids_and_filter(file1, file2, output_file_invalid)
 
+
+
+# Separate rows with missing inventory classification ids
+    missing_rows = df1[df1.iloc[:, 1].isin(missing_inv_cls_ids)]
+
+    # Add a reason column to the missing rows
+    missing_rows['Reason'] = 'Inventory Classification ID not found in Inventory_Classification_table'
+
+    return missing_rows
+

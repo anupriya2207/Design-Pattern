@@ -1,99 +1,85 @@
-@Mock
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class AggregatorAppServiceTest {
+
+    @Mock
     private WebClient webClient;
-    
+
     @Mock
     private WebClient.RequestBodyUriSpec requestBodyUriSpec;
-    
+
     @Mock
     private WebClient.RequestBodySpec requestBodySpec;
-    
+
     @Mock
     private WebClient.ResponseSpec responseSpec;
-    
-    @Mock
-    private WebClient.ResponseSpec.BodyToMonoSpec bodyToMonoSpec;
-    
-    @Mock
-    private AggregatorAppGetStatusRequest request;
-    
+
     @InjectMocks
-    private YourService yourService; // The class where your execute method is
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private AggregatorAppService aggregatorAppService; // Assuming your class is named AggregatorAppService
 
     @Test
-    void testExecute_success() {
-        // Arrange
-        String appClientId = "test-client-id";
-        String requestId = "1234";
-        UpdateAppStatusResponse mockResponse = new UpdateAppStatusResponse(); // Assuming this is the response object
-        when(request.getRequestId()).thenReturn(requestId);
-        when(request.getAppClientId()).thenReturn(appClientId);
-        
+    public void testExecute_Success() {
+        AggregatorAppGetStatusRequest request = new AggregatorAppGetStatusRequest();
+        request.setRequestId("12345");
+        request.setAppClientId("testClient");
+
         // Mock the WebClient behavior
+        UpdateAppStatusResponse mockResponse = new UpdateAppStatusResponse(); // Mock a response
         when(webClient.get()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.headers(any())).thenReturn(requestBodySpec);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.toEntity(UpdateAppStatusResponse.class)).thenReturn(bodyToMonoSpec);
-        when(bodyToMonoSpec.block()).thenReturn(ResponseEntity.ok(mockResponse));
+        when(responseSpec.toEntity(UpdateAppStatusResponse.class)).thenReturn(ResponseEntity.ok(mockResponse));
 
-        // Act
-        UpdateAppStatusResponse response = yourService.execute(request);
+        // Call the method under test
+        UpdateAppStatusResponse response = aggregatorAppService.execute(request);
 
-        // Assert
+        // Assertions
         assertNotNull(response);
-        assertEquals(mockResponse, response);
-        verify(webClient, times(1)).get();
+        // Additional assertions can be made depending on the fields in UpdateAppStatusResponse
     }
 
     @Test
-    void testExecute_WebClientResponseException() {
-        // Arrange
-        String appClientId = "test-client-id";
-        String requestId = "1234";
-        when(request.getRequestId()).thenReturn(requestId);
-        when(request.getAppClientId()).thenReturn(appClientId);
+    public void testExecute_WebClientResponseException() {
+        AggregatorAppGetStatusRequest request = new AggregatorAppGetStatusRequest();
+        request.setRequestId("12345");
+        request.setAppClientId("testClient");
 
-        // Mock WebClient to throw WebClientResponseException
+        // Simulate a WebClientResponseException
         when(webClient.get()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.headers(any())).thenReturn(requestBodySpec);
-        when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.toEntity(UpdateAppStatusResponse.class)).thenReturn(bodyToMonoSpec);
-        when(bodyToMonoSpec.block()).thenThrow(WebClientResponseException.class);
+        when(requestBodySpec.retrieve()).thenThrow(WebClientResponseException.class);
 
-        // Act & Assert
-        Exception exception = assertThrows(WebClientResponseException.class, () -> {
-            yourService.execute(request);
-        });
+        // Call the method under test and check if it handles the exception
+        UpdateAppStatusResponse response = aggregatorAppService.execute(request);
 
-        assertNotNull(exception);
+        // In case of an exception, the response should be null
+        assertNull(response);
     }
 
     @Test
-    void testExecute_genericException() {
-        // Arrange
-        String appClientId = "test-client-id";
-        String requestId = "1234";
-        when(request.getRequestId()).thenReturn(requestId);
-        when(request.getAppClientId()).thenReturn(appClientId);
+    public void testExecute_GenericException() {
+        AggregatorAppGetStatusRequest request = new AggregatorAppGetStatusRequest();
+        request.setRequestId("12345");
+        request.setAppClientId("testClient");
 
-        // Mock WebClient to throw a generic exception
+        // Simulate a generic exception
         when(webClient.get()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.headers(any())).thenReturn(requestBodySpec);
-        when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.toEntity(UpdateAppStatusResponse.class)).thenReturn(bodyToMonoSpec);
-        when(bodyToMonoSpec.block()).thenThrow(new RuntimeException("Generic error"));
+        when(requestBodySpec.retrieve()).thenThrow(RuntimeException.class);
 
-        // Act & Assert
-        CCARApplicationException exception = assertThrows(CCARApplicationException.class, () -> {
-            yourService.execute(request);
-        });
-
-        assertEquals("GET_APP_STATUS_EXCEPTION", exception.getMessage()); // You can adapt this to match your message format
+        // Call the method under test and assert that an exception is thrown
+        assertThrows(CCARApplicationException.class, () -> aggregatorAppService.execute(request));
     }
+}

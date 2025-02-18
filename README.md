@@ -5,3 +5,5 @@ response = Objects.requireNonNull(webClient
                     .retrieve()
                     .toEntity(UpdateAppStatusResponse.class)
                     .block()).getBody();
+                    when(responseSpec.toEntity(UpdateAppStatusResponse.class))
+                .thenReturn(Mono.just(new ResponseEntity<>(mockResponse, HttpStatus.OK)));

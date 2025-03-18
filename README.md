@@ -100,3 +100,57 @@ public static void writeJsonToCsv(String jsonResponse, String fileName) {
 
         List<Map<String, Object>> externalApps = (List<Map<String, Object>>) responseBody.get("externalApps");
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        GetAppDetailsResponse responseBody = responseEntity.getBody();
+
+        if (responseBody == null || responseBody.getExternalApps() == null) {
+            System.out.println("Response body is empty or does not contain 'externalApps'.");
+            return;
+        }
+
+        List<ExternalApp> externalApps = responseBody.getExternalApps();
+
+        try (FileWriter writer = new FileWriter("output.csv")) {
+            // Step 2: Write CSV Header
+            writer.append("Client ID, Data Categories, Active Application Version Number\n");
+
+            // Step 3: Iterate through externalApps and extract required fields
+            for (ExternalApp app : externalApps) {
+                String clientId = app.getClientId();
+                int activeVersion = app.getActiveApplicationVersionNumber();
+
+                // Convert dataCategories list to a comma-separated string
+                List<String> dataCategories = app.getDataCategories();
+                String dataCategoriesStr = String.join(", ", dataCategories);
+
+                // Write data to CSV (quotes around dataCategories to handle commas correctly)
+                writer.append(clientId).append(", ")
+                      .append("\"").append(dataCategoriesStr).append("\"").append(", ")
+                      .append(String.valueOf(activeVersion)).append("\n");
+            }
+
+            System.out.println("Data successfully written to output.csv");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+

@@ -83,3 +83,20 @@ public static void writeJsonToCsv(String jsonResponse, String fileName) {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
+
+
+    Map<String, Object> responseBody = responseEntity.getBody();
+
+        if (responseBody == null || !responseBody.containsKey("externalApps")) {
+            System.out.println("Response body is empty or does not contain 'externalApps'.");
+            return;
+        }
+
+        List<Map<String, Object>> externalApps = (List<Map<String, Object>>) responseBody.get("externalApps");
+

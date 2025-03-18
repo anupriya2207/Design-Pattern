@@ -154,3 +154,35 @@ public static void writeJsonToCsv(String jsonResponse, String fileName) {
         }
     }
 
+
+
+
+
+
+
+ List<Map<String, Object>> externalApps = (List<Map<String, Object>>) responseBody.get("externalApps");
+
+        try (FileWriter writer = new FileWriter("output.csv")) {
+            // Step 2: Write CSV Header
+            writer.append("Client ID, Data Categories, Active Application Version Number\n");
+
+            // Step 3: Iterate through externalApps and extract required fields
+            for (Map<String, Object> app : externalApps) {
+                String clientId = (String) app.get("clientId");
+                Integer activeVersion = (Integer) app.get("activeApplicationVersionNumber");
+
+                // Convert dataCategories list to a comma-separated string
+                List<String> dataCategories = (List<String>) app.get("dataCategories");
+                String dataCategoriesStr = String.join(", ", dataCategories);
+
+                // Write data to CSV (quotes around dataCategories to handle commas correctly)
+                writer.append(clientId).append(", ")
+                      .append("\"").append(dataCategoriesStr).append("\"").append(", ")
+                      .append(activeVersion.toString()).append("\n");
+            }
+
+            System.out.println("Data successfully written to output.csv");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }

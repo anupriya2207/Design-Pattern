@@ -292,3 +292,37 @@ public void putObject(final String key, final InputStream objectStream) throws I
         final RequestBody requestBody = RequestBody.fromBytes(ByteStreams.toByteArray(objectStream));
         client.putObject(request, requestBody);
     }
+
+
+
+
+
+
+
+
+    public void uploadFileToS3(String filePath) throws IOException {
+    if (isUnitTest) {
+        return;
+    }
+    
+    LOG.info("Uploading file to S3");
+    
+    String personProfileMapping = CDPConstants.prefix + FileNames.PERSON_PROFILE + 
+                                  DateTimeFormatter.BASIC_ISO_DATE.format(LocalDate.now());
+    String s3Key = personProfileMapping;
+    
+    // Read file content
+    File file = new File(filePath);
+    if (!file.exists()) {
+        throw new FileNotFoundException("File not found: " + filePath);
+    }
+    
+    try (InputStream inputStream = new FileInputStream(file)) {
+        objectStore.putObject(s3Key, inputStream);
+    } catch (Exception e) {
+        LOG.error("Exception occurred during file upload", e);
+        throw e;
+    }
+    
+    LOG.info("File successfully uploaded to S3: " + s3Key);
+}

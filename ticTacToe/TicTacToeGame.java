@@ -106,3 +106,42 @@ public class TicTacToeGame {
 
 
 }
+
+
+
+
+
+
+
+
+
+public void uploadCsvToS3(String csvFilePath) {
+    LOG.info("Uploading CSV file to S3...");
+
+    // Define S3 bucket name and object key
+    String bucketName = mercuryS3Properties.getBucket();
+    String objectKey = "uploads/" + Paths.get(csvFilePath).getFileName().toString(); // S3 file path
+
+    // Create S3 client
+    S3Client s3Client = S3Client.builder()
+            .region(Region.of(mercuryS3Properties.getRegion()))
+            .credentialsProvider(StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create(objectStore.getS3Keys().getAccessKey(), 
+                                               objectStore.getS3Keys().getSecretKeys())))
+            .build();
+
+    try {
+        // Upload file
+        s3Client.putObject(PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(objectKey)
+                        .build(),
+                Paths.get(csvFilePath));
+
+        LOG.info("CSV file successfully uploaded to S3: s3://{}/{}", bucketName, objectKey);
+    } catch (S3Exception e) {
+        LOG.error("S3 upload failed: {}", e.getMessage(), e);
+    } finally {
+        s3Client.close();
+    }
+}

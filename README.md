@@ -252,3 +252,35 @@ public static void writeJsonToCsv(String jsonResponse, String fileName) {
         s3Client.close();
     }
 }
+
+
+
+
+
+public void uploadFileToS3(String filePath) throws IOException {
+    if (isUnitTest) {
+        return;
+    }
+    
+    LOG.info("Uploading file to S3");
+    
+    String personProfileMapping = CDPConstants.prefix + FileNames.PERSON_PROFILE + 
+                                  DateTimeFormatter.BASIC_ISO_DATE.format(LocalDate.now());
+    String s3UploadPath = CDPConstants.S3_PROTOCOL + mercuryS3Properties.getBucket() + 
+                          "/" + personProfileMapping;
+    
+    // Read file content
+    File file = new File(filePath);
+    if (!file.exists()) {
+        throw new FileNotFoundException("File not found: " + filePath);
+    }
+    
+    try (InputStream inputStream = new FileInputStream(file)) {
+        objectStore.uploadFile(s3UploadPath, inputStream, file.length());
+    } catch (Exception e) {
+        LOG.error("Exception occurred during file upload", e);
+        throw e;
+    }
+    
+    LOG.info("File successfully uploaded to S3: " + s3UploadPath);
+}

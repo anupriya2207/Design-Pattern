@@ -186,3 +186,37 @@ public static void writeJsonToCsv(String jsonResponse, String fileName) {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
+
+
+
+
+    public void importDataToS3() throws FileNotFoundException{
+        if(isUnitTest){
+            return;
+        }
+        truncateTanTable(dbName+"."+dbSchema +CDPConstants.PROFILE_TABLE);
+        LOG.info("Exporting data to S3");
+        String personProfileMapping = CDPConstants.prefix + FileNames.PERSON_PROFILE + DateTimeFormatter.BASIC_ISO_DATE.format(LocalDate.now());
+        String tableName = consentdbName+"."+consentdbSchema+CDPConstants.CONSENT_PROFILE_TABLE;
+        //Set<String> keys = objectStore.getAllKeys(personProfileMapping);
+        String s3ImportPath = CDPConstants.S3_PROTOCOL + mercuryS3Properties.getBucket();
+        StringBuffer sb = new StringBuffer();
+        sb.append("'").append(s3ImportPath).append("/").append(personProfileMapping)
+                .append("?AWS_ACCESS_KEY_ID=").append(objectStore.getS3Keys().getAccessKey()).append("&AWS_SECRET_ACCESS_KEY=")
+                .append(objectStore.getS3Keys().getSecretKeys()).append("&AWS_ENDPOINT=").append(mercuryS3Properties.getDataplaneEndpoint()).append("' WITH chunk_rows='5000000'");
+        String exportQuery = "EXPORT INTO CSV %s FROM select cnst.ol_prs_id,cnst.ol_prfl_id from %s cnst AS OF SYSTEM TIME '-1h'".formatted(sb, tableName);
+        consentJdbcTemplate.execute((ConnectionCallback<Object>) connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(exportQuery)) {
+                statement.execute();
+            } catch (Exception e) {
+                LOG.error("Exception occurred during export", e);
+                throw e;
+            }
+            return null;
+        });

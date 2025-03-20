@@ -284,3 +284,11 @@ public void uploadFileToS3(String filePath) throws IOException {
     
     LOG.info("File successfully uploaded to S3: " + s3UploadPath);
 }
+
+
+
+public void putObject(final String key, final InputStream objectStream) throws IOException {
+        final PutObjectRequest request = PutObjectRequest.builder().bucket(bucket).key(key).build();
+        final RequestBody requestBody = RequestBody.fromBytes(ByteStreams.toByteArray(objectStream));
+        client.putObject(request, requestBody);
+    }

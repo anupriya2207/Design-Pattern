@@ -417,6 +417,12 @@ AND cre_ts < CURRENT_DATE;
         "usr_actn_log_mv->>'versionNumber' AS versionNumber, " +
 
 
-
+if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
+        aggregatorId="INTUIT";
+    }
+    else{
+        String[] clientIdArr = clientId.split(UNDER_SCORE);
+        aggregatorId = clientIdArr[0];
+    }
 
 

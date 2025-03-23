@@ -400,9 +400,9 @@ public void exportConsentDataToS3() {
 
 SELECT 
     audt_actv_id, 
-    COALESCE(JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.onlineProfileIdentifier'), 'NULL') AS onlineProfileIdentifier, 
-    COALESCE(JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.onlinePersonIdentifier'), 'NULL') AS onlinePersonIdentifier, 
-    JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.versionNumber') AS versionNumber, 
+    COALESCE(usr_actn_log_mv->>'onlineProfileIdentifier', 'NULL') AS onlineProfileIdentifier, 
+    COALESCE(usr_actn_log_mv->>'onlinePersonIdentifier', 'NULL') AS onlinePersonIdentifier, 
+    usr_actn_log_mv->>'versionNumber' AS versionNumber, 
     cre_ts, 
     txn_sts_cd, 
     appl_clnt_id, 
@@ -411,3 +411,9 @@ FROM consent_table
 WHERE txn_sts_cd = 'CREATE_CONSENT' 
 AND cre_ts >= CURRENT_DATE - INTERVAL '1 DAY' 
 AND cre_ts < CURRENT_DATE;
+
+
+
+
+
+

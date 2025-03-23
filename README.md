@@ -326,3 +326,13 @@ public void putObject(final String key, final InputStream objectStream) throws I
     
     LOG.info("File successfully uploaded to S3: " + s3Key);
 }
+
+
+
+
+
+
+
+
+audt_actv_id,usr_actn_log_mv,cre_ts,appl_clnt_id,txn_sts_cd,rsn_tx,extn_csnt_id,thrd_prty_csnt_srvc_usr_id
+72e108cc-07a0-4903-b8f4-82786c1d,"{""consentUserIdentifier"": ""41231f-14b2-4ebb-89de-765f8207c0bc"", ""digitalCustomerTypeCode"": ""PR"", ""enterprisePartyIdentifier"": ""06162507"", ""updatedAccountsAndPreferences"": {""accountsAutoAuthorizedIndicator"": true, ""clientId"": ""DIS"", ""consentStatusCode"": ""AC"", ""eligibleAccounts"": [{""accountIdentifier"": 946346, ""accountProductTypeCode"": ""080"", ""accountTypeCode"": ""BAC"", ""authorizationIndicator"": true, ""firmLineOfBusinessCode"": ""CARD"", ""lobAccountIdentifier"": ""14003507"", ""reasonText"": ""USER CONSENT"", ""subProductCode"": ""001"", ""systemOfRecordName"": ""C3"", ""virtualAccountAuthorizedIndicator"": false}], ""onlinePersonIdentifier"": 332981796, ""onlineProfileIdentifier"": 55969107, ""versionNumber"": ""1""}}",2025-03-22 09:00:50.975098,DIS,Update Consent,,7435291-29f5-37a4-87c8-31cd78d1a6ca,4881231f-14b2-4ebb-89de-765f207c0bc

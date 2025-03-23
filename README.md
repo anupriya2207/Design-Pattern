@@ -336,3 +336,59 @@ public void putObject(final String key, final InputStream objectStream) throws I
 
 audt_actv_id,usr_actn_log_mv,cre_ts,appl_clnt_id,txn_sts_cd,rsn_tx,extn_csnt_id,thrd_prty_csnt_srvc_usr_id
 72e108cc-07a0-4903-b8f4-82786c1d,"{""consentUserIdentifier"": ""41231f-14b2-4ebb-89de-765f8207c0bc"", ""digitalCustomerTypeCode"": ""PR"", ""enterprisePartyIdentifier"": ""06162507"", ""updatedAccountsAndPreferences"": {""accountsAutoAuthorizedIndicator"": true, ""clientId"": ""DIS"", ""consentStatusCode"": ""AC"", ""eligibleAccounts"": [{""accountIdentifier"": 946346, ""accountProductTypeCode"": ""080"", ""accountTypeCode"": ""BAC"", ""authorizationIndicator"": true, ""firmLineOfBusinessCode"": ""CARD"", ""lobAccountIdentifier"": ""14003507"", ""reasonText"": ""USER CONSENT"", ""subProductCode"": ""001"", ""systemOfRecordName"": ""C3"", ""virtualAccountAuthorizedIndicator"": false}], ""onlinePersonIdentifier"": 332981796, ""onlineProfileIdentifier"": 55969107, ""versionNumber"": ""1""}}",2025-03-22 09:00:50.975098,DIS,Update Consent,,7435291-29f5-37a4-87c8-31cd78d1a6ca,4881231f-14b2-4ebb-89de-765f207c0bc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public void exportConsentDataToS3() {
+    if (isUnitTest) {
+        return;
+    }
+
+    LOG.info("Exporting consent data to S3");
+
+    // Define the folder structure in S3
+    String fileName = "ConsentData_" + DateTimeFormatter.BASIC_ISO_DATE.format(LocalDate.now()) + ".csv";
+    String s3Path = "PDRAndConsentData/Consent_Data/" + fileName;  // <-- Updated folder path
+
+    String s3ImportPath = CDPConstants.S3_PROTOCOL + mercuryS3Properties.getBucket();
+
+    StringBuffer sb = new StringBuffer();
+    sb.append("'").append(s3ImportPath).append("/").append(s3Path) // <-- Using the new path
+            .append("?AWS_ACCESS_KEY_ID=").append(objectStore.getS3Keys().getAccessKey())
+            .append("&AWS_SECRET_ACCESS_KEY=").append(objectStore.getS3Keys().getSecretKeys())
+            .append("&AWS_ENDPOINT=").append(mercuryS3Properties.getDataplaneEndpoint())
+            .append("' WITH chunk_rows='5000000'");
+
+    String exportQuery = "EXPORT INTO CSV %s FROM " +
+            "(SELECT audt_actv_id, " +
+            "JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.onlineProfileIdentifier') AS onlineProfileIdentifier, " +
+            "JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.onlinePersonIdentifier') AS onlinePersonIdentifier, " +
+            "JSON_EXTRACT_SCALAR(usr_actn_log_mv, '$.versionNumber') AS versionNumber, " +
+            "cre_ts, txn_sts_cd, appl_clnt_id, extn_csnt_id " +
+            "FROM consent_table " +
+            "WHERE txn_sts_cd = 'CREATE_CONSENT' " +
+            "AND cre_ts >= NOW() - INTERVAL '1 DAY')"
+            .formatted(sb);
+
+    consentJdbcTemplate.execute((ConnectionCallback<Object>) connection -> {
+        try (PreparedStatement statement = connection.prepareStatement(exportQuery)) {
+            statement.execute();
+            LOG.info("Export to S3 completed successfully: " + s3Path);
+        } catch (Exception e) {
+            LOG.error("Exception occurred during export", e);
+            throw e;
+        }
+        return null;
+    });
+}

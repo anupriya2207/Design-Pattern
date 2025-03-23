@@ -426,3 +426,25 @@ if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
     }
 
 
+
+
+
+    SELECT 
+        audt_actv_id, 
+        COALESCE(usr_actn_log_mv->>'onlineProfileIdentifier', 'NULL') AS onlineProfileIdentifier, 
+        COALESCE(usr_actn_log_mv->>'onlinePersonIdentifier', 'NULL') AS onlinePersonIdentifier, 
+        usr_actn_log_mv->>'versionNumber' AS versionNumber, 
+        cre_ts, 
+        txn_sts_cd, 
+        appl_clnt_id, 
+        extn_csnt_id, 
+        CASE 
+            WHEN appl_clnt_id IN ('TTAX', 'JPMINTQBO100002', 'JPMINTMIN100001') THEN 'INTUIT' 
+            ELSE SPLIT_PART(appl_clnt_id, '_', 1) 
+        END AS aggregator 
+    FROM consent_table 
+    WHERE txn_sts_cd = 'CREATE_CONSENT' 
+    AND cre_ts >= CURRENT_DATE - INTERVAL '1 DAY'  -- Only yesterday's data
+    AND cre_ts < CURRENT_DATE
+
+

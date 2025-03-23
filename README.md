@@ -417,7 +417,7 @@ AND cre_ts < CURRENT_DATE;
         "usr_actn_log_mv->>'versionNumber' AS versionNumber, " +
 
 
-if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
+if(clientId.matches("TTAX|TQBO100002|MIN100001")){
         aggregatorId="INTUIT";
     }
     else{
@@ -439,7 +439,7 @@ if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
         appl_clnt_id, 
         extn_csnt_id, 
         CASE 
-            WHEN appl_clnt_id IN ('TTAX', 'JPMINTQBO100002', 'JPMINTMIN100001') THEN 'INTUIT' 
+            WHEN appl_clnt_id IN ('TTAX', 'J100002', 'JINTMIN100001') THEN 'INTUIT' 
             ELSE SPLIT_PART(appl_clnt_id, '_', 1) 
         END AS aggregator 
     FROM consent_table 

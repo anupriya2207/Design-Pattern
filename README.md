@@ -448,3 +448,9 @@ if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
     AND cre_ts < CURRENT_DATE
 
 
+
+
+
+    {"digitalCustomerTypeCode": "PR", "enterprisePartyIdentifier": "0307436849", "updatedAccountsAndPreferences": {"accountsAutoAuthorizedIndicator": true, "clientId": "AMAZON_AMAZON", "consentStatusCode": "AC", "eligibleAccounts": [{"accountIdentifier": 11399260, "accountProductTypeCode": "080", "accountTypeCode": "BAC", "authorizationIndicator": true, "lobAccountIdentifier": "1403175825", "reasonText": "USER CONSENT", "subProductCode": "001", "virtualAccountAuthorizedIndicator": true}], "onlinePersonIdentifier": 37491014160, "onlineProfileIdentifier": 57865492, "versionNumber": "1"}}
+
+

@@ -454,3 +454,40 @@ if(clientId.matches("TTAX|TQBO100002|MIN100001")){
     {"digitalCustomerTypeCode": "PR", "enterprisePartyIdentifier": "0307436849", "updatedAccountsAndPreferences": {"accountsAutoAuthorizedIndicator": true, "clientId": "AMAZON_AMAZON", "consentStatusCode": "AC", "eligibleAccounts": [{"accountIdentifier": 11399260, "accountProductTypeCode": "080", "accountTypeCode": "BAC", "authorizationIndicator": true, "lobAccountIdentifier": "1403175825", "reasonText": "USER CONSENT", "subProductCode": "001", "virtualAccountAuthorizedIndicator": true}], "onlinePersonIdentifier": 37491014160, "onlineProfileIdentifier": 57865492, "versionNumber": "1"}}
 
 
+
+
+
+
+
+
+
+
+
+    SELECT
+    t1.audt_actv_id,
+    t2.ol_prs_id AS onlinePersonIdentifier,
+    t2.ol_prfl_id AS onlineProfileIdentifier,
+    t3.appl_ver_nb AS versionNumber,
+    t1.cre_ts,
+    t1.txn_sts_cd,
+    t1.appl_clnt_id,
+    t1.extn_csnt_id,
+    CASE
+        WHEN t1.appl_clnt_id IN ('TTAX', 'JPMINTQBO100002', 'JPMINTMIN100001') THEN 'INTUIT'
+        ELSE SPLIT_PART(t1.appl_clnt_id, '_', 1)
+        END AS aggregator
+FROM csnt_audt_actv t1
+LEFT JOIN thrd_prty_csnt_srvc_usr t2
+ON t1.thrd_prty_csnt_srvc_usr_id = t2.thrd_prty_csnt_srvc_usr_id
+LEFT JOIN usr_csnt t3
+ON t1.thrd_prty_csnt_srvc_usr_id = t3.thrd_prty_csnt_srvc_usr_id
+AND t1.appl_clnt_id=t3.appl_clnt_id
+WHERE EXISTS (
+    SELECT 1
+    FROM csnt_audt_actv ct
+    WHERE ct.thrd_prty_csnt_srvc_usr_id = t1.thrd_prty_csnt_srvc_usr_id
+)
+  AND t1.txn_sts_cd = 'CREATE_CONSENT'
+  AND t1.cre_ts >= CURRENT_DATE - INTERVAL '1 DAY';
+
+

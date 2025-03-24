@@ -526,3 +526,44 @@ WHERE EXISTS (
         .formatted(sb, tableName);
 
 
+
+
+
+
+
+
+        private void writeJsonToCsv(ResponseEntity<GetAppDetailsResponse> response, String fileName) {
+
+        LOG.info("Writing json to csv");
+        //Step 1: Extract Response
+        GetAppDetailsResponse responseBody = response.getBody();
+        List<AppDetails> externalApps = responseBody.getExternalApps();
+        String path ="consent-data-processor/src/main/resources/" + fileName;
+        LOG.info("Writing json to csv: {}", path);
+
+        try (FileWriter writer = new FileWriter(path)) {
+            // Step 2: Write CSV Header
+            writer.append("Client ID, Data Categories, Active Application Version Number\n");
+
+            // Step 3: Iterate through externalApps and extract required fields
+            for (AppDetails app : externalApps) {
+                String clientId =  app.getClientId();
+                Integer activeVersion =  app.getActiveApplicationVersionNumber();
+
+                // Convert dataCategories list to a comma-separated string
+                String dataCategoriesStr = String.join("| ", app.getDataCategories());
+
+                // Write data to CSV (quotes around dataCategories to handle commas correctly)
+                writer.append(clientId).append(", ")
+                        .append(dataCategoriesStr).append(", ")
+                        .append(activeVersion.toString()).append("\n");
+            }
+
+            System.out.println("Data successfully written to partner_app_data.csv");
+            //uploadFileToS3(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+

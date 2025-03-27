@@ -599,3 +599,47 @@ LEFT JOIN csnt_audt_actv nc
     AND nc.txn_sts_cd = 'NEW_CONSENT';
 
 
+
+
+
+
+
+WITH new_consent_cte AS (
+    -- Fetch NEW_CONSENT entries from the table
+    SELECT 
+        thrd_prty_usr_srvc_id, 
+        usr_actn_log_mv->>'onlineProfileIdentifier' AS onlineProfileIdentifier,
+        usr_actn_log_mv->>'onlinePersonIdentifier' AS onlinePersonIdentifier, 
+        usr_actn_log_mv->>'versionNumber' AS versionNumber,
+        cre_ts AS new_cre_ts  -- Capture timestamp for ordering
+    FROM csnt_audt_actv 
+    WHERE txn_sts_cd = 'NEW_CONSENT'
+),
+create_consent_cte AS (
+    -- Fetch CREATE_CONSENT entries from the last day
+    SELECT 
+        audt_actv_id, 
+        thrd_prty_usr_srvc_id, 
+        cre_ts, 
+        txn_sts_cd, 
+        appl_clnt_id, 
+        extn_csnt_id 
+    FROM csnt_audt_actv 
+    WHERE txn_sts_cd = 'CREATE_CONSENT' 
+    AND cre_ts >= CURRENT_DATE - INTERVAL '1 DAY' 
+    AND cre_ts < CURRENT_DATE
+)
+SELECT 
+    cc.audt_actv_id, 
+    cc.cre_ts, 
+    cc.txn_sts_cd, 
+    cc.appl_clnt_id, 
+    cc.extn_csnt_id,
+    nc.onlineProfileIdentifier,
+    nc.onlinePersonIdentifier, 
+    nc.versionNumber 
+FROM create_consent_cte cc
+JOIN new_consent_cte nc 
+    ON cc.thrd_prty_usr_srvc_id = nc.thrd_prty_usr_srvc_id 
+    AND cc.cre_ts > nc.new_cre_ts  -- Ensures CREATE_CONSENT comes immediately after NEW_CONSENT
+ORDER BY cc.cre_ts DESC;

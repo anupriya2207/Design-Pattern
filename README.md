@@ -417,13 +417,7 @@ AND cre_ts < CURRENT_DATE;
         "usr_actn_log_mv->>'versionNumber' AS versionNumber, " +
 
 
-if(clientId.matches("TTAX|TQBO100002|MIN100001")){
-        aggregatorId="INTUIT";
-    }
-    else{
-        String[] clientIdArr = clientId.split(UNDER_SCORE);
-        aggregatorId = clientIdArr[0];
-    }
+kini
 
 
 
@@ -565,5 +559,43 @@ WHERE EXISTS (
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    WITH create_consent_cte AS (
+    SELECT 
+        audt_actv_id, 
+        thrd_prty_usr_srvc_id, 
+        cre_ts, 
+        txn_sts_cd, 
+        appl_clnt_id, 
+        extn_csnt_id 
+    FROM csnt_audt_actv 
+    WHERE txn_sts_cd = 'CREATE_CONSENT' 
+    AND cre_ts >= CURRENT_DATE - INTERVAL '1 DAY' 
+    AND cre_ts < CURRENT_DATE
+)
+SELECT 
+    cc.audt_actv_id, 
+    cc.cre_ts, 
+    cc.txn_sts_cd, 
+    cc.appl_clnt_id, 
+    cc.extn_csnt_id,
+    nc.usr_actn_log_mv->>'onlineProfileIdentifier' AS onlineProfileIdentifier,
+    nc.usr_actn_log_mv->>'onlinePersonIdentifier' AS onlinePersonIdentifier, 
+    nc.usr_actn_log_mv->>'versionNumber' AS versionNumber 
+FROM create_consent_cte cc
+LEFT JOIN csnt_audt_actv nc 
+    ON cc.thrd_prty_usr_srvc_id = nc.thrd_prty_usr_srvc_id 
+    AND nc.txn_sts_cd = 'NEW_CONSENT';
 
 

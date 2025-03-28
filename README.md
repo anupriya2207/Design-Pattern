@@ -736,3 +736,73 @@ public class GetAppDetailsService {
     }
 }
 
+
+
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClient.RequestBodyUriSpec;
+import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
+import org.springframework.web.reactive.function.client.WebClient.RequestHeadersUriSpec;
+import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
+import reactor.core.publisher.Mono;
+
+@ExtendWith(MockitoExtension.class)
+public class GetAppDetailsServiceTest {
+
+    @Mock
+    private WebClient webClient;
+
+    @Mock
+    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
+
+    @Mock
+    private WebClient.RequestHeadersSpec requestHeadersSpec;
+
+    @Mock
+    private WebClient.ResponseSpec responseSpec;
+
+    @InjectMocks
+    private GetAppDetailsService getAppDetailsService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.headers(any())).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+    }
+
+    @Test
+    void testGetAppDetails_Success() {
+        GetAppDetailsResponse mockResponse = new GetAppDetailsResponse();
+        ResponseEntity<GetAppDetailsResponse> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenReturn(Mono.just(responseEntity));
+
+        ResponseEntity<GetAppDetailsResponse> response = getAppDetailsService.getAppDetails();
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void testGetAppDetails_InternalServerError() {
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(new RuntimeException("Internal Server Error"));
+        
+        Exception exception = assertThrows(RuntimeException.class, () -> getAppDetailsService.getAppDetails());
+        assertEquals("Internal Server Error", exception.getMessage());
+    }
+}
+

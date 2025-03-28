@@ -875,3 +875,34 @@ public class GetAppDetailsServiceTest {
         assertEquals("session-123", headers.getFirst("sessionId"));
         assertEquals("web", headers.getFirst("channelType"));
     }
+
+
+
+@Test
+void testGetAppDetails_HeadersIncluded() {
+    // Set MDC values
+    MDC.put("channelId", "12345");
+    MDC.put("traceId", "trace-123");
+    MDC.put("sessionId", "session-123");
+    MDC.put("channelType", "web");
+
+    // Capture headers
+    doAnswer(invocation -> {
+        Consumer<HttpHeaders> headersConsumer = invocation.getArgument(0);
+        HttpHeaders headers = new HttpHeaders();
+        headersConsumer.accept(headers);
+
+        // Assertions
+        assertEquals("application/json", headers.getFirst(HttpHeaders.CONTENT_TYPE));
+        assertEquals("12345", headers.getFirst("channelId"));
+        assertEquals("trace-123", headers.getFirst("traceId"));
+        assertEquals("session-123", headers.getFirst("sessionId"));
+        assertEquals("web", headers.getFirst("channelType"));
+
+        return requestBodyUriSpec;
+    }).when(requestBodyUriSpec).headers(any());
+
+    // Execute service
+    when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenReturn(Mono.just(new ResponseEntity<>(HttpStatus.OK)));
+    getAppDetailsService.getAppDetails();
+}

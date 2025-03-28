@@ -806,3 +806,53 @@ public class GetAppDetailsServiceTest {
     }
 }
 
+
+@Test
+    void testGetAppDetails_BadRequest() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.BAD_REQUEST.value(), "Bad Request", null, null, null);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(exception);
+        
+        Exception thrownException = assertThrows(SubSystemException.class, () -> getAppDetailsService.getAppDetails());
+        assertTrue(thrownException.getMessage().contains("Bad Request"));
+    }
+
+    @Test
+    void testGetAppDetails_NotFound() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.NOT_FOUND.value(), "Not Found", null, null, null);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(exception);
+        
+        Exception thrownException = assertThrows(RuntimeException.class, () -> getAppDetailsService.getAppDetails());
+        assertTrue(thrownException.getMessage().contains("Not Found"));
+    }
+
+    @Test
+    void testGetAppDetails_InternalServerError() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", null, null, null);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(exception);
+        
+        Exception thrownException = assertThrows(RuntimeException.class, () -> getAppDetailsService.getAppDetails());
+        assertTrue(thrownException.getMessage().contains("Internal Server Error"));
+    }
+
+    @Test
+    void testGetAppDetails_UnsupportedMediaType() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), "Unsupported Media Type", null, null, null);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(exception);
+        
+        Exception thrownException = assertThrows(SubSystemException.class, () -> getAppDetailsService.getAppDetails());
+        assertTrue(thrownException.getMessage().contains("Unsupported Media Type"));
+    }
+
+    @Test
+    void testGetAppDetails_UnknownException() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.I_AM_A_TEAPOT.value(), "Unknown Error", null, null, null);
+        when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenThrow(exception);
+        
+        Exception thrownException = assertThrows(InternalSystemException.class, () -> getAppDetailsService.getAppDetails());
+        assertTrue(thrownException.getMessage().contains("Unknown Error"));
+    }

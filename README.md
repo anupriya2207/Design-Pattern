@@ -643,3 +643,96 @@ JOIN new_consent_cte nc
     ON cc.thrd_prty_usr_srvc_id = nc.thrd_prty_usr_srvc_id 
     AND cc.cre_ts > nc.new_cre_ts  -- Ensures CREATE_CONSENT comes immediately after NEW_CONSENT
 ORDER BY cc.cre_ts DESC;
+
+
+
+
+
+
+
+@Service
+@Bulkhead(name = "getAllAppDetailsService")
+@CircuitBreaker(name = "getAllAppDetailsService")
+public class GetAppDetailsService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GetAppDetailsService.class);
+    private static final String WEB_CLIENT_BEAN = "daps.webclient.services.getAllAppDetailsService";
+    private final String host;
+    private final String url;
+    private final String httpProtocol;
+    private final WebClient webClient;
+
+    private final ObjectMapper objectMapper;
+
+    public GetAppDetailsService(@Qualifier(WEB_CLIENT_BEAN) WebClient webClient,
+                                @Value("${daps.webclient.services.getAllAppDetailsService.url}") String url,
+                                @Value("${host.cpac}") String host,
+                                ObjectMapper objectMapper,
+                                @Value("${http.protocol}") String httpProtocol) {
+        this.webClient = webClient;
+        this.url = url;
+        this.host = host;
+
+        this.httpProtocol = httpProtocol;
+        this.objectMapper = objectMapper;
+    }
+
+    public ResponseEntity<GetAppDetailsResponse> getAppDetails() {
+
+        ResponseEntity<GetAppDetailsResponse> response = null;
+        try {
+            response = webClient
+                    .post()
+                    .uri(generateURI())
+                    .headers(httpHeaders -> httpHeaders.addAll(getHeaders()))
+                    .bodyValue(Collections.emptyList())
+                    .retrieve()
+                    .toEntity(GetAppDetailsResponse.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            handleError(e);
+        } catch (Exception e) {
+            LOG.error(ErrorMessages.EXCEPTION_WHILE_CALLING_CPAC_APP_DETAILS, e.getMessage());
+            throw new InternalSystemException(ErrorMessages.EXCEPTION_WHILE_CALLING_CPAC_APP_DETAILS, e);
+        }
+        return response;
+    }
+
+    private void handleError(WebClientResponseException exception) {
+        switch (exception.getRawStatusCode()) {
+            case HttpStatus.SC_BAD_REQUEST:
+            case HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE:
+                throw new SubSystemException(CDPConstants.ERR_CODE_ERR_DESC.formatted(
+                        ErrorMessages.CPAC_EXCEPTION, exception.getStatusCode(), exception.getStatusText()));
+            case HttpStatus.SC_NOT_FOUND:
+                throw new RuntimeException(CDPConstants.ERR_CODE_ERR_DESC.formatted(
+                        ErrorMessages.CPAC_ROUTE_NOT_FOUND_EXCEPTION, exception.getStatusCode(), exception.getStatusText()));
+            case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+                throw new RuntimeException(CDPConstants.ERR_CODE_ERR_DESC.formatted(
+                        ErrorMessages.INTERNAL_SERVER_ERROR, exception.getStatusCode(), exception.getStatusText()));
+            default:
+                throw new InternalSystemException(CDPConstants.ERR_CODE_ERR_DESC.formatted(ErrorMessages.CPAC_EXCEPTION,
+                        exception.getStatusCode(), exception.getStatusText(), exception));
+        }
+    }
+
+    private String generateURI() {
+        return UriComponentsBuilder.newInstance()
+                .scheme(httpProtocol)
+                .host(host)
+                .path(url)
+                .toUriString();
+    }
+
+    private HttpHeaders getHeaders() {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        httpHeaders.add(CDPConstants.CHANNEL_ID, MDC.get(CDPConstants.CHANNEL_ID));
+        httpHeaders.add(ContextKeys.TRACE_ID, MDC.get(CDPConstants.TRACE_ID_HEADER));
+        httpHeaders.add(ContextKeys.SESSION_ID, MDC.get(CDPConstants.SESSION_ID_HEADER));
+        httpHeaders.add(ContextKeys.CHANNEL_TYPE, MDC.get(CDPConstants.CHANNEL_TYPE_HEADER));
+        LOG.info(httpHeaders.toString());
+        return httpHeaders;
+    }
+}
+

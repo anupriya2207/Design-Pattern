@@ -856,3 +856,22 @@ public class GetAppDetailsServiceTest {
         Exception thrownException = assertThrows(InternalSystemException.class, () -> getAppDetailsService.getAppDetails());
         assertTrue(thrownException.getMessage().contains("Unknown Error"));
     }
+
+
+
+    @Test
+    void testGetHeaders() {
+        MDC.put("channelId", "12345");
+        MDC.put("traceId", "trace-123");
+        MDC.put("sessionId", "session-123");
+        MDC.put("channelType", "web");
+
+        HttpHeaders headers = getAppDetailsService.getHeaders();
+        
+        assertNotNull(headers);
+        assertEquals("application/json", headers.getFirst(HttpHeaders.CONTENT_TYPE));
+        assertEquals("12345", headers.getFirst("channelId"));
+        assertEquals("trace-123", headers.getFirst("traceId"));
+        assertEquals("session-123", headers.getFirst("sessionId"));
+        assertEquals("web", headers.getFirst("channelType"));
+    }

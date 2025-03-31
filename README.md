@@ -826,7 +826,14 @@ No other logic changed	The rest of the filtering, JSON extraction, and CSV gener
 
 
 
-
+String aggregatorId = "";
+    if(clientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
+        aggregatorId="INTUIT";
+    }
+    else{
+        String[] clientIdArr = clientId.split(UNDER_SCORE);
+        aggregatorId = clientIdArr[0];
+    }
 
 
 

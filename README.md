@@ -718,3 +718,116 @@ public class CsntAudtActService {
 }
 
 
+
+
+
+
+
+
+
+
+
+try {
+            // Fetch all records within the date range
+            List<CsntAudtAct> allRecords = repository.findByCreatedTimestampBetween(fromDate, toDate);
+
+            // Filter records where txn_sts_cd = "CREATE_CONSENT"
+            List<CsntAudtAct> createConsentRecords = allRecords.stream()
+                    .filter(record -> "CREATE_CONSENT".equals(record.getTransactionStatusCode()))
+                    .collect(Collectors.toList());
+
+            List<String[]> csvData = new ArrayList<>();
+            csvData.add(new String[]{"AuditActivityId", "CreatedTimestamp", "TransactionStatusCode", "ApplicationClientId",
+                    "ExternalConsentId", "ThirdPartyConsentServiceUserId", "VersionNumber",
+                    "OnlineProfileIdentifier", "OnlinePersonIdentifier"});
+
+            for (CsntAudtAct createConsent : createConsentRecords) {
+                String thirdPartyConsentServiceUserId = createConsent.getThirdPartyConsentServiceUserId();
+                String applicationClientId = createConsent.getApplicationClientId();
+
+                // Find matching "New Consent" records from allRecords
+                List<CsntAudtAct> newConsentRecords = allRecords.stream()
+                        .filter(record -> "New Consent".equals(record.getTransactionStatusCode()) &&
+                                applicationClientId.equals(record.getApplicationClientId()) &&
+                                thirdPartyConsentServiceUserId.equals(record.getThirdPartyConsentServiceUserId()))
+                        .collect(Collectors.toList());
+
+                // Find the record with the highest version number
+                Optional<CsntAudtAct> highestVersionRecord = newConsentRecords.stream()
+                        .max(Comparator.comparing(record -> extractVersionNumber(record.getUserActionLogMv())));
+
+                if (highestVersionRecord.isPresent()) {
+                    JsonNode userActionLog = objectMapper.readTree(highestVersionRecord.get().getUserActionLogMv());
+
+                    String versionNumber = userActionLog.path("updatedAccountsAndPreferences").path("versionNumber").asText();
+                    String onlineProfileIdentifier = userActionLog.path("updatedAccountsAndPreferences").path("onlineProfileIdentifier").asText();
+                    String onlinePersonIdentifier = userActionLog.path("updatedAccountsAndPreferences").path("onlinePersonIdentifier").asText();
+
+                    csvData.add(new String[]{
+                            createConsent.getAuditActivityId(),
+                            createConsent.getCreatedTimestamp().toString(),
+                            createConsent.getTransactionStatusCode(),
+                            createConsent.getApplicationClientId(),
+                            createConsent.getExternalConsentId(),
+                            createConsent.getThirdPartyConsentServiceUserId(),
+                            versionNumber,
+                            onlineProfileIdentifier,
+                            onlinePersonIdentifier
+                    });
+                }
+            }
+
+            writeCsvFile(csvData);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Extracts the version number from JSON
+    private int extractVersionNumber(String jsonString) {
+        try {
+            JsonNode node = objectMapper.readTree(jsonString);
+            return node.path("updatedAccountsAndPreferences").path("versionNumber").asInt();
+        } catch (Exception e) {
+            return 0; // Default if parsing fails
+        }
+    }
+
+    // Writes the CSV file in the project root
+    private void writeCsvFile(List<String[]> data) {
+        try (FileWriter writer = new FileWriter("audit_report.csv")) {
+            for (String[] row : data) {
+                writer.append(String.join(",", row)).append("\n");
+            }
+            System.out.println("CSV file generated successfully in project root!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+🔹 What Changed?
+Change	Why?
+Updated "NEW_CONSENT" → "New Consent"	Now correctly filters txn_sts_cd = "New Consent".
+No other logic changed	The rest of the filtering, JSON extraction, and CSV generation remains the same.
+🚀 Final Behavior
+1️⃣ Fetch all records within the date range.
+2️⃣ Find CREATE_CONSENT records.
+3️⃣ Find matching "New Consent" records for each.
+4️⃣ Extract the highest version from JSON.
+5️⃣ Extract profile & person identifiers from JSON.
+6️⃣ Generate audit_report.csv in the project root. 🎯
+
+✅ Now it should work exactly as expected! 🚀
+
+
+
+
+
+
+
+
+
+
+
+

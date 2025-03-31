@@ -579,3 +579,43 @@ void testGetAppDetails_HeadersIncluded() {
     when(responseSpec.toEntity(GetAppDetailsResponse.class)).thenReturn(Mono.just(new ResponseEntity<>(HttpStatus.OK)));
     getAppDetailsService.getAppDetails();
 }
+
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "csnt_audt_act")
+public class CsntAudtAct {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "audt_actv_id")
+    private String auditActivityId;
+
+    @Column(name = "usr_actn_log_mv", columnDefinition = "TEXT")
+    private String userActionLogMv;
+
+    @Column(name = "cre_ts")
+    private LocalDateTime createdTimestamp;
+
+    @Column(name = "appl_clnt_id")
+    private String applicationClientId;
+
+    @Column(name = "txn_sts_cd")
+    private String transactionStatusCode;
+
+    @Column(name = "rsn_tx", columnDefinition = "TEXT")
+    private String reasonText;
+
+    @Column(name = "extn_csnt_id")
+    private String externalConsentId;
+
+    @Column(name = "thrd_prty_csnt_srvc_usr_id")
+    private String thirdPartyConsentServiceUserId;
+
+    // Getters and Setters
+}
+

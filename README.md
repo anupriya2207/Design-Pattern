@@ -619,3 +619,102 @@ public class CsntAudtAct {
     // Getters and Setters
 }
 
+
+
+
+
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Service;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class CsntAudtActService {
+
+    private final CsntAudtActRepository repository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public CsntAudtActService(CsntAudtActRepository repository) {
+        this.repository = repository;
+    }
+
+    public void processAuditData(LocalDateTime fromDate, LocalDateTime toDate) throws IOException {
+        // Fetch all records within the date range
+        List<CsntAudtAct> allRecords = repository.findByCreatedTimestampBetween(fromDate, toDate);
+
+        // Step 1: Find all "CREATE_CONSENT" records
+        List<CsntAudtAct> createConsentRecords = allRecords.stream()
+                .filter(record -> "CREATE_CONSENT".equalsIgnoreCase(record.getTransactionStatusCode()))
+                .collect(Collectors.toList());
+
+        // Step 2: Store these records for lookup
+        Map<String, CsntAudtAct> createConsentMap = new HashMap<>();
+        for (CsntAudtAct record : createConsentRecords) {
+            String key = record.getThirdPartyConsentServiceUserId() + "-" + record.getApplicationClientId();
+            createConsentMap.put(key, record);
+        }
+
+        // Step 3: Find the highest version "NEW_CONSENT" record for each matching key
+        Map<String, CsntAudtAct> highestVersionRecords = new HashMap<>();
+        for (CsntAudtAct record : allRecords) {
+            if (!"NEW_CONSENT".equalsIgnoreCase(record.getTransactionStatusCode())) continue;
+
+            String key = record.getThirdPartyConsentServiceUserId() + "-" + record.getApplicationClientId();
+            if (!createConsentMap.containsKey(key)) continue; // Skip if no matching CREATE_CONSENT record
+
+            try {
+                JsonNode rootNode = objectMapper.readTree(record.getUserActionLogMv());
+                int version = rootNode.path("updatedAccountsAndPreferences").path("versionNumber").asInt();
+
+                if (!highestVersionRecords.containsKey(key) ||
+                        version > objectMapper.readTree(highestVersionRecords.get(key).getUserActionLogMv())
+                                .path("updatedAccountsAndPreferences").path("versionNumber").asInt()) {
+                    highestVersionRecords.put(key, record);
+                }
+            } catch (Exception e) {
+                System.err.println("Error parsing JSON: " + e.getMessage());
+            }
+        }
+
+        // Step 4: Write results to CSV
+        writeToCSV(createConsentMap, highestVersionRecords);
+    }
+
+    private void writeToCSV(Map<String, CsntAudtAct> createConsentMap, Map<String, CsntAudtAct> highestVersionRecords) throws IOException {
+        try (FileWriter writer = new FileWriter("audit_report.csv")) {
+            writer.append("AuditActivityId,CreatedTimestamp,TransactionStatus,ApplicationClientId,ExternalConsentId,ThirdPartyConsentServiceUserId,Version,ProfileIdentifier,PersonIdentifier\n");
+
+            for (Map.Entry<String, CsntAudtAct> entry : createConsentMap.entrySet()) {
+                String key = entry.getKey();
+                CsntAudtAct createConsentRecord = entry.getValue();
+                CsntAudtAct highestVersionRecord = highestVersionRecords.get(key);
+
+                String version = "", profileId = "", personId = "";
+                if (highestVersionRecord != null) {
+                    JsonNode rootNode = objectMapper.readTree(highestVersionRecord.getUserActionLogMv());
+                    version = rootNode.path("updatedAccountsAndPreferences").path("versionNumber").asText();
+                    profileId = rootNode.path("updatedAccountsAndPreferences").path("onlineProfileIdentifier").asText();
+                    personId = rootNode.path("updatedAccountsAndPreferences").path("onlinePersonIdentifier").asText();
+                }
+
+                writer.append(String.join(",",
+                        createConsentRecord.getAuditActivityId(),
+                        createConsentRecord.getCreatedTimestamp().toString(),
+                        createConsentRecord.getTransactionStatusCode(),
+                        createConsentRecord.getApplicationClientId(),
+                        createConsentRecord.getExternalConsentId(),
+                        createConsentRecord.getThirdPartyConsentServiceUserId(),
+                        version, profileId, personId))
+                        .append("\n");
+            }
+        }
+        System.out.println("CSV file generated: audit_report.csv (in project root)");
+    }
+}
+
+

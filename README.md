@@ -838,3 +838,165 @@ String aggregatorId = "";
 
 
 
+package com.chase.digital.aggregator.cdp.service;
+
+import com.chase.digital.aggregator.cdp.consent.CsntAudtActv;
+import com.chase.digital.aggregator.cdp.consent.repository.CsntAudtActvRepository;
+
+import com.chase.digital.aggregator.cdp.model.ConsentDataExtractionRequest;
+import com.chase.digital.aggregator.cdp.util.S3ObjectStore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+
+@Service
+@ConditionalOnProperty(name = "trigger.job.name",havingValue = "consent_data_extraction_job")
+public class ConsentDataExtractionService {
+    private static final Logger LOG = LoggerFactory.getLogger(ConsentDataExtractionService.class);
+    private final CsntAudtActvRepository repository;
+    private final ObjectMapper objectMapper;
+    private final S3ObjectStore objectStore;
+
+    public ConsentDataExtractionService(CsntAudtActvRepository repository, ObjectMapper objectMapper, S3ObjectStore objectStore) {
+        this.repository = repository;
+        this.objectMapper = objectMapper;
+        this.objectStore = objectStore;
+    }
+
+    public void extractConsentData(ConsentDataExtractionRequest request) {
+        LocalDateTime fromDate = request.getFromDate();
+        LocalDateTime toDate = request.getToDate();
+        // Fetch all records within the date range
+        try {
+            // Fetch all records within the date range
+            List<CsntAudtActv> allRecords = repository.findByCreatedTimestampBetween(fromDate, toDate);
+
+            // Filter records where txn_sts_cd = "CREATE_CONSENT"
+            List<CsntAudtActv> createConsentRecords = allRecords.stream()
+                    .filter(record -> "CREATE_CONSENT".equals(record.getTransactionStatusCode()))
+                    .toList();
+
+            List<String[]> csvData = new ArrayList<>();
+            csvData.add(new String[]{"audt_actv_id", "cre_ts", "txn_sts_cd", "appl_clnt_id",
+                    "extn_csnt_id", "thrd_prty_csnt_srvc_usr_id", "version",
+                    "profile_id", "person_id", "aggregator"});
+
+            for (CsntAudtActv createConsent : createConsentRecords) {
+                String thirdPartyConsentServiceUserId = createConsent.getThirdPartyConsentServiceUserId();
+                String applicationClientId = createConsent.getApplicationClientId();
+
+                // Find matching "New Consent" records from allRecords
+                List<CsntAudtActv> newConsentRecords = allRecords.stream()
+                        .filter(record -> "New Consent".equals(record.getTransactionStatusCode()) &&
+                                applicationClientId.equals(record.getApplicationClientId()) &&
+                                thirdPartyConsentServiceUserId.equals(record.getThirdPartyConsentServiceUserId()))
+                        .toList();
+
+                // Find the record with the highest version number
+                Optional<CsntAudtActv> highestVersionRecord = newConsentRecords.stream()
+                        .max(Comparator.comparing(record -> extractVersionNumber(record.getUserActionLogMv())));
+
+                if (highestVersionRecord.isPresent()) {
+                    JsonNode userActionLog = objectMapper.readTree(highestVersionRecord.get().getUserActionLogMv());
+
+                    String versionNumber = userActionLog.path("updatedAccountsAndPreferences").path("versionNumber").asText();
+                    String onlineProfileIdentifier = userActionLog.path("updatedAccountsAndPreferences").path("onlineProfileIdentifier").asText();
+                    String onlinePersonIdentifier = userActionLog.path("updatedAccountsAndPreferences").path("onlinePersonIdentifier").asText();
+                    String aggregator = determineAggregator(applicationClientId);
+
+                    csvData.add(new String[]{
+                            createConsent.getAuditActivityId(),
+                            createConsent.getCreatedTimestamp().toString(),
+                            createConsent.getTransactionStatusCode(),
+                            createConsent.getApplicationClientId(),
+                            createConsent.getExternalConsentId(),
+                            createConsent.getThirdPartyConsentServiceUserId(),
+                            versionNumber,
+                            onlineProfileIdentifier,
+                            onlinePersonIdentifier,
+                            aggregator
+                    });
+                }
+            }
+            writeCsvFileToMercuryS3(csvData, fromDate);
+//            writeCsvFile(csvData);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String determineAggregator(String applicationClientId) {
+        String aggregatorId = "";
+        if(applicationClientId.matches("TTAX|JPMINTQBO100002|JPMINTMIN100001")){
+            aggregatorId="INTUIT";
+        }
+        else{
+            String[] clientIdArr = applicationClientId.split("_");
+            aggregatorId = clientIdArr[0];
+        }
+        return aggregatorId;
+    }
+
+    // Extracts the version number from JSON
+    private int extractVersionNumber(String jsonString) {
+        try {
+            JsonNode node = objectMapper.readTree(jsonString);
+            return node.path("updatedAccountsAndPreferences").path("versionNumber").asInt();
+        } catch (Exception e) {
+            return 0; // Default if parsing fails
+        }
+    }
+
+    // Writes the CSV file to mercury s3
+    private void writeCsvFileToMercuryS3(List<String[]> data, LocalDateTime fromDate) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             OutputStreamWriter writer = new
+                     OutputStreamWriter(baos, StandardCharsets.UTF_8)) {
+            for (String[] row : data) {
+                writer.append(String.join(",", row)).append("\n");
+            }
+        writer.flush(); // Ensure all data is written to the ByteArrayOutputStream
+
+        // Upload to S3
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+            String dateStr = fromDate.toLocalDate().format(DateTimeFormatter.BASIC_ISO_DATE);
+            String folderPath = "PDRAndConsentData/CONSENT_DATA/";
+            String s3Key = folderPath + "CONSENT_Data_" + dateStr + ".csv";
+            LOG.info("Uploading file to S3 key : {}", s3Key);
+            objectStore.putObject(s3Key, bais);
+            LOG.info("File successfully uploaded to S3: {}", s3Key);
+        }
+        } catch (IOException e) {
+         LOG.error("Error writing CSV data to in-memory stream", e);
+        }
+    }
+
+//    // Writes the CSV file in the project root
+//    private void writeCsvFile(List<String[]> data) {
+//        try (FileWriter writer = new FileWriter("audit_report.csv")) {
+//            for (String[] row : data) {
+//                writer.append(String.join(",", row)).append("\n");
+//            }
+//            System.out.println("CSV file generated successfully in project root!");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+}
+
+
+
+
+

@@ -1000,3 +1000,80 @@ public class ConsentDataExtractionService {
 
 
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.ArrayList;
+
+@ExtendWith(MockitoExtension.class)
+class ConsentDataExtractionServiceTest {
+    
+    @Mock
+    private CsntAudtActvRepository repository;
+    
+    @Mock
+    private S3ObjectStore objectStore;
+    
+    @Mock
+    private ObjectMapper objectMapper;
+    
+    @InjectMocks
+    private ConsentDataExtractionService service;
+    
+    private List<CsntAudtActv> mockRecords;
+    
+    @BeforeEach
+    void setUp() {
+        mockRecords = new ArrayList<>();
+        CsntAudtActv createConsentRecord = new CsntAudtActv("1", LocalDateTime.now(), "CREATE_CONSENT", "APP123", "EXT123", "USER123", "{}");
+        CsntAudtActv newConsentRecord = new CsntAudtActv("2", LocalDateTime.now(), "New Consent", "APP123", "EXT123", "USER123", "{\"updatedAccountsAndPreferences\": {\"versionNumber\": 2, \"onlineProfileIdentifier\": \"profile1\", \"onlinePersonIdentifier\": \"person1\"}}");
+        
+        mockRecords.add(createConsentRecord);
+        mockRecords.add(newConsentRecord);
+    }
+
+    @Test
+    void testExtractConsentData() throws Exception {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(1);
+        LocalDateTime toDate = LocalDateTime.now();
+        ConsentDataExtractionRequest request = new ConsentDataExtractionRequest(fromDate, toDate);
+        
+        when(repository.findByCreatedTimestampBetween(fromDate, toDate)).thenReturn(mockRecords);
+        when(objectMapper.readTree(anyString())).thenAnswer(invocation -> new ObjectMapper().readTree(invocation.getArgument(0)));
+        
+        service.extractConsentData(request);
+        
+        verify(objectStore, times(1)).putObject(anyString(), any());
+    }
+
+    @Test
+    void testExtractConsentData_IndirectlyVerifyAggregatorAndVersionNumber() throws Exception {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(1);
+        LocalDateTime toDate = LocalDateTime.now();
+        ConsentDataExtractionRequest request = new ConsentDataExtractionRequest(fromDate, toDate);
+        
+        when(repository.findByCreatedTimestampBetween(fromDate, toDate)).thenReturn(mockRecords);
+        when(objectMapper.readTree(anyString())).thenAnswer(invocation -> new ObjectMapper().readTree(invocation.getArgument(0)));
+        
+        service.extractConsentData(request);
+        
+        verify(objectStore, times(1)).putObject(argThat(key -> key.contains("CONSENT_Data_")), any());
+        
+        assertTrue(mockRecords.stream().anyMatch(record -> record.getTransactionStatusCode().equals("CREATE_CONSENT")));
+        assertTrue(mockRecords.stream().anyMatch(record -> record.getTransactionStatusCode().equals("New Consent")));
+    }
+}
+
+
+

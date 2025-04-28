@@ -129,3 +129,11 @@ lenient().when(webClient.mutate().codecs(any()).build()).thenReturn(webClient); 
         lenient().when(requestBodyUriSpec.headers(any())).thenReturn(requestBodyUriSpec);
         lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
         lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+
+
+
+
+
+        WebClient webClient = webClientBuilder
+            .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MEMORY_SIZE))
+            .build();

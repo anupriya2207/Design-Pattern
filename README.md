@@ -111,3 +111,10 @@ WebClient.Builder mockBuilder = mock(WebClient.Builder.class);
 when(webClient.mutate()).thenReturn(mockBuilder);
 when(mockBuilder.codecs(any())).thenReturn(mockBuilder);
 when(mockBuilder.build()).thenReturn(webClient);
+
+
+
+WebClient.Builder webClientBuilder = mock(WebClient.Builder.class);
+lenient().when(webClient.mutate()).thenReturn(webClientBuilder);
+lenient().when(webClientBuilder.codecs(any())).thenReturn(webClientBuilder);
+lenient().when(webClientBuilder.build()).thenReturn(webClient);

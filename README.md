@@ -170,3 +170,33 @@ lenient().when(webClient.mutate().codecs(any()).build()).thenReturn(webClient); 
         WebClient webClient = webClientBuilder
             .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MEMORY_SIZE))
             .build();
+
+
+
+
+
+
+
+
+
+@Mock
+private WebClient.Builder webClientBuilder;
+
+@Mock
+private WebClient webClient;
+and in @BeforeEach:
+
+java
+Copy
+Edit
+@BeforeEach
+void setUp() {
+    lenient().when(webClientBuilder.codecs(any())).thenReturn(webClientBuilder);
+    lenient().when(webClientBuilder.build()).thenReturn(webClient);
+
+    lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.headers(any())).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+    lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+}

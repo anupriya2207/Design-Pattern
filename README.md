@@ -200,3 +200,24 @@ void setUp() {
     lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
     lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
 }
+
+
+
+
+
+
+@BeforeEach
+void setUp() {
+    // when webClientBuilder.codecs(any()) is called, return webClientBuilder again
+    lenient().when(webClientBuilder.codecs(any())).thenReturn(webClientBuilder);
+
+    // when build() is called, return the mock webClient
+    lenient().when(webClientBuilder.build()).thenReturn(webClient);
+
+    // Mock the rest
+    lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.headers(any())).thenReturn(requestBodyUriSpec);
+    lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+    lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+}

@@ -104,3 +104,10 @@ public class GetAppDetailsServiceTest {
 }
 
 webClient.mutate().codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(MEMORY_SIZE)).build();
+
+
+
+WebClient.Builder mockBuilder = mock(WebClient.Builder.class);
+when(webClient.mutate()).thenReturn(mockBuilder);
+when(mockBuilder.codecs(any())).thenReturn(mockBuilder);
+when(mockBuilder.build()).thenReturn(webClient);

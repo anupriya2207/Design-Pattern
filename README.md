@@ -118,3 +118,14 @@ WebClient.Builder webClientBuilder = mock(WebClient.Builder.class);
 lenient().when(webClient.mutate()).thenReturn(webClientBuilder);
 lenient().when(webClientBuilder.codecs(any())).thenReturn(webClientBuilder);
 lenient().when(webClientBuilder.build()).thenReturn(webClient);
+
+
+
+
+
+lenient().when(webClient.mutate().codecs(any()).build()).thenReturn(webClient);  // now works because deep stub
+        lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.headers(any())).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);

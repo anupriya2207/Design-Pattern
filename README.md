@@ -134,6 +134,39 @@ lenient().when(webClient.mutate().codecs(any()).build()).thenReturn(webClient); 
 
 
 
+
+
+
+        public GetAppDetailsService(@Qualifier(WEB_CLIENT_BEAN) WebClient webClient,
+                                @Value("${daps.webclient.services.getAllAppDetailsService.url}") String url,
+                                @Value("${host.cpac}") String host,
+                                ObjectMapper objectMapper,
+                                @Value("${http.protocol}") String httpProtocol) {
+        this.webClient = webClient.mutate().codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(MEMORY_SIZE)).build();
+        this.url = url;
+        this.host = host;
+
+        this.httpProtocol = httpProtocol;
+        this.objectMapper = objectMapper;
+    }
+
+    public ResponseEntity<GetAppDetailsResponse> getAppDetails() {
+
+        ResponseEntity<GetAppDetailsResponse> response = null;
+        try {
+            response = webClient
+                    .post()
+                    .uri(generateURI())
+                    .headers(httpHeaders -> httpHeaders.addAll(getHeaders()))
+                    .bodyValue(Collections.emptyList())
+                    .retrieve()
+                    .toEntity(GetAppDetailsResponse.class)
+                    .block();
+
+
+
+
+
         WebClient webClient = webClientBuilder
             .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MEMORY_SIZE))
             .build();
